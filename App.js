@@ -1,14 +1,40 @@
 /*
 * @bainloko
 * DDM II
-* 18/01/2022
+* 18/01/2022, 04/03/2022
 */
 
 import * as React from 'react';
-import {View, StatusBar, Text, TextInput, Pressable, StyleSheet} from 'react-native';
+import { View, StatusBar, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import meuEstilo from './src/meuEstilo';
 
+class ChangeInnerHTML extends React.Component {
+  state = {style: {}, value: ''}
+
+  innerHTML = (style, html) => {
+    this.setState({style: style});
+    this.setState({value: html});
+  }
+
+  render(){
+    return(
+      <View>
+        <Text style={this.state.style}>{this.state.value}</Text>
+      </View>
+    );
+  } 
+} //code courtesy of Akash Mittal https://www.akashmittal.com/react-component-get-element-by-id-code-example-demo/, tweaked by @bemloko
+
 export default class App extends React.Component {
+  constructor(props){
+    super(props);
+    this.componentRef = React.createRef();
+  }
+
+  referComponentByRef = (html) => {
+    this.componentRef.current.innerHTML(meuEstilo.textoResultado, html); //envia o estilo desejado OBJETO e o código HTML a ser inserido SEM FORMATAÇÃO
+  }
+  
   state = {
     peso: 0.0,
     altura: 0.0,
@@ -16,27 +42,26 @@ export default class App extends React.Component {
   }
 
   atualizaPeso = (number) => {
-    this.setState({peso: number});
+    this.setState({peso: parseFloat(number)});
   }
   
   atualizaAltura = (number) => {
-    this.setState({altura: number});
+    this.setState({altura: parseFloat(number)});
   }
-
+  
   roundAccurately(number, decimalPlaces){
-    decimalPlaces = 3;
     return Number(Math.round(number + "e" + decimalPlaces) + "e-" + decimalPlaces); //code courtesy of Jack Moore https://www.jacklmoore.com/notes/rounding-in-javascript/ - in this case, I'll set the decimal places to a constant three, which is fine for me' applications. thanks m8 HUAHUEAHUAEUH
   }
 
-  formula(){
-    this.state.resultadoIMC = this.roundAccurately(parseFloat(this.state.peso) / (parseFloat(this.state.altura) * parseFloat(this.state.altura)));
-    
+  calcular(peso, altura){
+    this.state.resultadoIMC = (this.roundAccurately(peso / (altura * altura)), 3);
+
     if (this.state.resultadoIMC < 18.5){
-      document.getElementById("resultado").innerHTML = ("Seu IMC é " + this.state.resultadoIMC + ".\nVocê está com o peso abaixo\ndo normal. Procure um médico\nassim que possível!");
+      this.referComponentByRef(("Seu IMC é " + this.state.resultadoIMC + ".\nVocê está com o peso abaixo\ndo normal. Procure um médico\nassim que possível!"));
     } else if (this.state.resultadoIMC > 24.9){
-      document.getElementById("resultado").innerHTML = ("Seu IMC é " + this.state.resultadoIMC + ".\nVocê está com o peso acima\ndo normal. Procure um médico\nassim que possível!");
+      this.referComponentByRef(("Seu IMC é " + this.state.resultadoIMC + ".\nVocê está com o peso acima\ndo normal. Procure um médico\nassim que possível!"));
     } else {
-      document.getElementById("resultado").innerHTML = ("Seu IMC é " + this.state.resultadoIMC + ".\nVocê está com o peso dentro\ndo normal. Continue assim!");
+      this.referComponentByRef(("Seu IMC é " + this.state.resultadoIMC + ".\nVocê está com o peso dentro\ndo normal. Continue assim!"));
     }
   }
 
@@ -44,12 +69,12 @@ export default class App extends React.Component {
     return(
       <View style={meuEstilo.container}>
         <StatusBar />
-          <Text style={meuEstilo.textoInicial}><span>Calculadora do IMC para Adultos</span></Text>
+          <View><Text style={meuEstilo.textoInicial}>Calculadora do IMC para Adultos</Text></View>
           <TextInput style={meuEstilo.inputExemplo} underlineColorAndroid="transparent" placeholder="Digite o peso (em Kg)" autoCapitalize="none" onChangeText={this.atualizaPeso} keyboardType="numeric" />
-          <TextInput style={meuEstilo.inputExemplo2} underlineColorAndroid="transparent" placeholder="Digite a altura (em M)" autoCapitalize="none" onChangeText={this.atualizaAltura} keyboardType="numeric" /> 
-          <Text style={meuEstilo.textoResultado}><span id="resultado"></span></Text>
-          <Text style={meuEstilo.textoHr}><hr /></Text>
-          <Pressable style={meuEstilo.botaoExemplo} onPress={()=>this.formula(this.state.peso, this.state.altura, this.state.resultadoIMC)}>
+          <TextInput style={meuEstilo.inputExemplo2} underlineColorAndroid="transparent" placeholder="Digite a altura (em M)" autoCapitalize="none" onChangeText={this.atualizaAltura} keyboardType="numeric" />
+          <ChangeInnerHTML ref={node => this.componentRef.current = node} />
+          <View style={meuEstilo.viewHr} />
+          <Pressable style={meuEstilo.botaoExemplo} onPress={() => this.calcular(this.state.peso, this.state.altura)}>
             <Text style={meuEstilo.fonteExemplo}>Calcular</Text>
           </Pressable>
       </View>
